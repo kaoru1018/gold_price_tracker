@@ -3,20 +3,22 @@
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # CSVが存在するか確認
+          # 1. 念のため最新状態を取得（競合回避）
+          git pull --rebase origin main
+          
+          # 2. ファイルがあるか確認
           if [ -f "gold_price.csv" ]; then
-            echo "CSV found, adding to git..."
             git add gold_price.csv
             
-            # 変更がある場合のみコミット
+            # 3. 変更差分があるかチェック
             if ! git diff --quiet --cached; then
               git commit -m "Update gold price"
               git push
             else
-              echo "No changes detected."
+              echo "No changes detected, skipping commit."
             fi
           else
             echo "Error: gold_price.csv not found."
-            ls -R  # デバッグ用にファイル一覧を表示
+            ls -R
             exit 1
           fi
