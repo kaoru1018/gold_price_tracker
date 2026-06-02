@@ -1,35 +1,22 @@
-name: Gold Price Tracker
-on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install dependencies
-        run: |
-          pip install requests beautifulsoup4 pandas
-      - name: Run scraper
-        run: python main.py
-      - name: Commit and push
+- name: Commit and push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # ファイルが存在するか確認してから追加
-          if [ -f gold_price.csv ]; then
+          
+          # CSVが存在するか確認
+          if [ -f "gold_price.csv" ]; then
+            echo "CSV found, adding to git..."
             git add gold_price.csv
+            
             # 変更がある場合のみコミット
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Update gold price" && git push)
+            if ! git diff --quiet --cached; then
+              git commit -m "Update gold price"
+              git push
+            else
+              echo "No changes detected."
+            fi
           else
-            echo "gold_price.csv not found!"
+            echo "Error: gold_price.csv not found."
+            ls -R  # デバッグ用にファイル一覧を表示
             exit 1
           fi
