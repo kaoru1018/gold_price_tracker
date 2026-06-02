@@ -1,24 +1,33 @@
-- name: Commit and push
+name: Gold Price Tracker
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 pandas
+      - name: Run scraper
+        run: python main.py
+      - name: Commit and push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          # 1. 念のため最新状態を取得（競合回避）
-          git pull --rebase origin main
-          
-          # 2. ファイルがあるか確認
-          if [ -f "gold_price.csv" ]; then
-            git add gold_price.csv
-            
-            # 3. 変更差分があるかチェック
-            if ! git diff --quiet --cached; then
-              git commit -m "Update gold price"
-              git push
-            else
-              echo "No changes detected, skipping commit."
-            fi
-          else
-            echo "Error: gold_price.csv not found."
-            ls -R
-            exit 1
+          git add gold_price.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "Update gold price"
+            git push origin main
           fi
